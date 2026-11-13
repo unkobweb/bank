@@ -65,8 +65,9 @@ export async function runWatches(opts: { force?: boolean } = {}): Promise<WatchR
   }
 
   for (const e of run.events) {
-    const watch = s.data.watches[e.watch_id];
-    const url = watch?.webhook_url || config.notifyWebhookUrl;
+    // Notifications only ever go to the server-configured webhook, never to a URL
+    // supplied through a tool call.
+    const url = config.notifyWebhookUrl;
     if (url) await notify(url, e).catch((err) => run.errors.push(`notify: ${(err as Error).message}`));
   }
   return run;

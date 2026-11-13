@@ -310,10 +310,9 @@ export function registerTools(server: McpServer): void {
         min_amount: z.number().optional().describe("Minimum amount for *_matching and credit_missing_by"),
         by_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Deadline for credit_missing_by"),
         note: z.string().optional().describe("Shown in the notification, e.g. 'Invoice 2024-17 from Acme'"),
-        webhook_url: z.string().url().optional().describe("Override the server's NOTIFY_WEBHOOK_URL for this watch"),
       },
     },
-    guard(async ({ account, type, amount, match, min_amount, by_date, note, webhook_url }) => {
+    guard(async ({ account, type, amount, match, min_amount, by_date, note }) => {
       const a = resolveAccount(account);
       let rule: WatchRule;
       switch (type) {
@@ -333,10 +332,10 @@ export function registerTools(server: McpServer): void {
           rule = { type, match, by_date, min_amount };
           break;
       }
-      if (!webhook_url && !config.notifyWebhookUrl) {
-        return fail("No webhook configured. Set NOTIFY_WEBHOOK_URL on the server (a Slack incoming webhook works) or pass webhook_url. You can still run check_watches manually.");
+      if (!config.notifyWebhookUrl) {
+        return fail("No webhook configured. Set NOTIFY_WEBHOOK_URL on the server (a Slack incoming webhook works). You can still run check_watches manually.");
       }
-      const watch = { id: randomUUID().slice(0, 8), account: a.uid, rule, note, webhook_url, created: new Date().toISOString(), active: true, seen: [] };
+      const watch = { id: randomUUID().slice(0, 8), account: a.uid, rule, note, created: new Date().toISOString(), active: true, seen: [] };
       store().putWatch(watch);
       return json({ ok: true, watch: { ...watch, account: a.label ?? a.name ?? a.uid } });
     }),
